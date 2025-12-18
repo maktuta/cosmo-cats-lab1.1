@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: Products API
+  version: 1.0.0
+  description: 'API для керування товарами. Містить інформацію про структуру вхідних
+    (request) і вихідних (response) даних, включаючи валідаційні вимоги до кожного
+    поля.
+
+    '
+servers:
+- url: http://localhost:8080
+paths:
+  /products:
+    get:
+      summary: Отримати список усіх товарів
+      responses:
+        '200':
+          description: Успішна відповідь із масивом товарів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDto'
+    post:
+      summary: Додати новий товар
+      description: Створює новий товар із валідацією обов’язкових полів.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &id001
+              $ref: '#/components/schemas/ProductDto'
+      responses:
+        '201':
+          description: Товар успішно створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '400':
+          description: Некоректні дані (порушення валідації)
+  /products/{id}:
+    get:
+      summary: Отримати товар за ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Успішна відповідь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '404':
+          description: Товар не знайдено
+    put:
+      summary: Оновити товар
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id001
+      responses:
+        '200':
+          description: Товар оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDto'
+        '400':
+          description: Некоректні дані (порушення валідації)
+        '404':
+          description: Товар не знайдено
+    delete:
+      summary: Видалити товар за ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Товар успішно видалено
+        '404':
+          description: Товар не знайдено
+components:
+  schemas:
+    ProductDto:
+      type: object
+      description: Вихідні дані про товар.
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: Унікальний ідентифікатор товару
+        name:
+          type: string
+          example: Космічне молоко
+          description: Назва товару; min 3 max 50; має містити космічний термін (star/galaxy/comet...)
+          minLength: 3
+          maxLength: 50
+        price:
+          type: number
+          format: float
+          example: 400.0
+          description: Ціна товару в гривнях; > 0
+          minimum: 0.01
+      required:
+      - name
+      - price
+    ProductCreateRequest:
+      type: object
+      description: Вхідні дані для створення нового товару.
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: Зоряний чай
+          description: Назва товару (мінімум 3 символи); має містити космічний термін
+            (star/galaxy/comet...)
+        price:
+          type: number
+          format: float
+          minimum: 0.01
+          maximum: 100000
+          example: 250.0
+          description: Ціна товару (не може бути від’ємною)
+      required:
+      - name
+      - price
+    ProductUpdateRequest:
+      type: object
+      description: Вхідні дані для оновлення товару.
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: Оновлене космічне молоко
+          description: Нова назва товару; має містити космічний термін (star/galaxy/comet...)
+        price:
+          type: number
+          format: float
+          minimum: 0.01
+          maximum: 100000
+          example: 450.0
+          description: Нова ціна товару
+      required:
+      - name
+      - price
