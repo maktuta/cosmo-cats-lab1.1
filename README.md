@@ -1,1 +1,1 @@
-MAIN root.
+lab3
