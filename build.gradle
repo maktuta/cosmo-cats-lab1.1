@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -29,9 +30,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // ✅ MapStruct
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
@@ -39,4 +41,20 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir("reports/coverage")
+        xml.required = false
+        csv.required = false
+    }
 }
