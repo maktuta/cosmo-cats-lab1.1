@@ -1,68 +1,84 @@
 package org.example.lesson_2.service;
 
-import org.example.lesson_2.domain.Product;
 import org.example.lesson_2.dto.ProductDto;
-import org.example.lesson_2.mapper.ProductMapper;
 import org.example.lesson_2.exception.ResourceNotFoundException;
+import org.example.lesson_2.mapper.ProductMapper;
+import org.example.lesson_2.persistence.entity.ProductEntity;
+import org.example.lesson_2.persistence.repository.CategoryRepository;
+import org.example.lesson_2.persistence.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final Map<Integer, Product> mockDb = new HashMap<>();
-    private final AtomicInteger idCounter = new AtomicInteger(1);
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper mapper;
 
-    public ProductServiceImpl(ProductMapper mapper) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              CategoryRepository categoryRepository,
+                              ProductMapper mapper) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
         this.mapper = mapper;
-        // Заглушки
-        mockDb.put(1, new Product(1, "Laptop", 1200.0f, 1));
-        mockDb.put(2, new Product(2, "Smartphone", 800.0f, 1));
     }
 
     @Override
+    @Transactional
     public ProductDto createProduct(ProductDto productDto) {
-        int id = idCounter.incrementAndGet();
-        Product product = mapper.toEntity(productDto);
-        product.setId(id);
-        mockDb.put(id, product);
-        return mapper.toDto(product);
+        var category = categoryRepository.findById((long) productDto.getCategory())
+                .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + productDto.getCategory() + " not found."));
+
+        ProductEntity entity = mapper.toEntity(productDto);
+        entity.setCategory(category);
+
+        ProductEntity saved = productRepository.save(entity);
+        return mapper.toDto(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductDto> getAllProducts() {
-        return mockDb.values().stream().map(mapper::toDto).toList();
+        return productRepository.findAll()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductDto getProductById(int id) {
-        Product product = mockDb.get(id);
-        if (product == null) {
-            throw new ResourceNotFoundException("Product with ID " + id + " not found.");
-        }
+        ProductEntity product = productRepository.findById((long) id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found."));
         return mapper.toDto(product);
     }
 
     @Override
-    public ProductDto updateProduct(int id, ProductDto updatedProduct) {
-        Product existing = mockDb.get(id);
-        if (existing == null) {
-            throw new ResourceNotFoundException("Product with ID " + id + " not found.");
-        }
+    @Transactional
+    public ProductDto updateProduct(int id, ProductDto updatedDto) {
+        ProductEntity existing = productRepository.findById((long) id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found."));
 
-        existing.setName(updatedProduct.getName());
-        existing.setPrice(updatedProduct.getPrice());
-        mockDb.put(id, existing);
-        return mapper.toDto(existing);
+        var category = categoryRepository.findById((long) updatedDto.getCategory())
+                .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + updatedDto.getCategory() + " not found."));
+
+        existing.setProductName(updatedDto.getName());
+        existing.setPrice(updatedDto.getPrice() == null ? null : new java.math.BigDecimal(String.valueOf(updatedDto.getPrice())));
+        existing.setCategory(category);
+
+        ProductEntity saved = productRepository.save(existing);
+        return mapper.toDto(saved);
     }
 
     @Override
+    @Transactional
     public void deleteProduct(int id) {
-        if (mockDb.remove(id) == null) {
+        if (!productRepository.existsById((long) id)) {
             throw new ResourceNotFoundException("Product with ID " + id + " not found.");
         }
+        productRepository.deleteById((long) id);
     }
 }
