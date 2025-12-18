@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ProductServiceImpl implements ProductService {
 
     private final Map<Integer, Product> mockDb = new HashMap<>();
-    private final AtomicInteger idCounter = new AtomicInteger(1);
+    private final AtomicInteger idCounter;
     private final ProductMapper mapper;
 
     public ProductServiceImpl(ProductMapper mapper) {
@@ -21,7 +21,22 @@ public class ProductServiceImpl implements ProductService {
         // Заглушки
         mockDb.put(1, new Product(1, "Laptop", 1200.0f, 1));
         mockDb.put(2, new Product(2, "Smartphone", 800.0f, 1));
-    }
+        int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+
+                                                    int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+int maxId = mockDb.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        this.idCounter = new AtomicInteger(maxId);
+}
 
     @Override
     public ProductDto createProduct(ProductDto productDto) {
